@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { DeviceCard } from "@/components/DeviceCard";
 import { StatsCard } from "@/components/StatsCard";
+import { DeviceManagement } from "@/components/DeviceManagement";
 import { Device, NetworkStats } from "@/types/device";
 import { calculateStats, fetchDevices } from "@/utils/mockData";
 import { Activity, Server, AlertTriangle, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -99,56 +101,46 @@ const Index = () => {
           </div>
         )}
 
-        {/* Devices Grid */}
-        <div>
-          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Server className="h-5 w-5" />
-            Monitored Devices
-          </h2>
-          
-          {loading && devices.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Loading devices...
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {devices.map((device) => (
-                <DeviceCard key={device.id} device={device} />
-              ))}
-            </div>
-          )}
+        {/* Tabs for Dashboard and Management */}
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="manage">Manage Devices</TabsTrigger>
+          </TabsList>
 
-          {!loading && devices.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              No devices found. Configure your monitoring endpoints.
-            </div>
-          )}
-        </div>
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard" className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Server className="h-5 w-5" />
+                Monitored Devices
+              </h2>
+              
+              {loading && devices.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  Loading devices...
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {devices.map((device) => (
+                    <DeviceCard key={device.id} device={device} />
+                  ))}
+                </div>
+              )}
 
-        {/* Configuration Info */}
-        <div className="mt-12 p-6 bg-muted/30 rounded-lg border border-border">
-          <h3 className="font-semibold text-foreground mb-2">Configuration</h3>
-          <p className="text-sm text-muted-foreground mb-3">
-            Devices are loaded from <code className="bg-background px-1.5 py-0.5 rounded text-xs font-mono">public/devices.json</code>. Edit this file to add, remove, or update monitored devices. The dashboard auto-refreshes every 30 seconds.
-          </p>
-          <div className="bg-background p-4 rounded font-mono text-xs overflow-x-auto">
-            <pre className="text-muted-foreground">
-{`// Device Format in public/devices.json:
-[
-  {
-    "id": "unique-id",
-    "name": "Device Name",
-    "ip": "192.168.1.10",
-    "status": "online" | "offline" | "warning",
-    "responseTime": 12, // milliseconds (optional)
-    "lastCheck": "2025-11-26T10:30:00.000Z",
-    "uptime": 99.98, // percentage (optional)
-    "location": "Data Center A" (optional)
-  }
-]`}
-            </pre>
-          </div>
-        </div>
+              {!loading && devices.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  No devices found. Add devices in the Manage Devices tab.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Manage Devices Tab */}
+          <TabsContent value="manage">
+            <DeviceManagement devices={devices} onDevicesChange={loadDevices} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
