@@ -16,6 +16,7 @@ let devices = [
     name: "Web Server",
     ip: "192.168.1.10",
     status: "unknown",
+    category: "physical-server",
     responseTime: 0,
     lastCheck: new Date().toISOString(),
     uptime: 0,
@@ -25,9 +26,10 @@ let devices = [
   },
   {
     id: "2",
-    name: "Database Server",
+    name: "Primary Database",
     ip: "192.168.1.20",
     status: "unknown",
+    category: "database",
     responseTime: 0,
     lastCheck: new Date().toISOString(),
     uptime: 0,
@@ -37,9 +39,10 @@ let devices = [
   },
   {
     id: "3",
-    name: "Mail Server",
+    name: "Mail Server VM",
     ip: "192.168.1.30",
     status: "unknown",
+    category: "virtual-machine",
     responseTime: 0,
     lastCheck: new Date().toISOString(),
     uptime: 0,
@@ -49,9 +52,10 @@ let devices = [
   },
   {
     id: "4",
-    name: "File Server",
+    name: "Core Switch",
     ip: "192.168.1.40",
     status: "unknown",
+    category: "switch",
     responseTime: 0,
     lastCheck: new Date().toISOString(),
     uptime: 0,
@@ -61,9 +65,10 @@ let devices = [
   },
   {
     id: "5",
-    name: "Backup Server",
+    name: "Edge Firewall",
     ip: "192.168.1.50",
     status: "unknown",
+    category: "firewall",
     responseTime: 0,
     lastCheck: new Date().toISOString(),
     uptime: 0,
@@ -73,9 +78,10 @@ let devices = [
   },
   {
     id: "6",
-    name: "Load Balancer",
+    name: "App VM Cluster",
     ip: "192.168.1.60",
     status: "unknown",
+    category: "virtual-machine",
     responseTime: 0,
     lastCheck: new Date().toISOString(),
     uptime: 0,
@@ -156,6 +162,7 @@ app.post('/api/devices', (req, res) => {
     name: req.body.name,
     ip: req.body.ip,
     status: 'unknown',
+    category: req.body.category || 'physical-server',
     responseTime: 0,
     lastCheck: new Date().toISOString(),
     uptime: 0,
@@ -172,6 +179,7 @@ app.put('/api/devices/:id', (req, res) => {
   if (device) {
     device.name = req.body.name || device.name;
     device.ip = req.body.ip || device.ip;
+    device.category = req.body.category || device.category;
     device.location = req.body.location !== undefined ? req.body.location : device.location;
     res.json(device);
   } else {

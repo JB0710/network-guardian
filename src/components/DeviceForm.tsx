@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Device, DeviceStatus } from "@/types/device";
+import { Device, DeviceCategory } from "@/types/device";
 
 const deviceSchema = z.object({
   name: z.string().trim().min(1, "Device name is required").max(100),
@@ -26,6 +26,9 @@ const deviceSchema = z.object({
     /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     "Invalid IP address or hostname"
   ),
+  category: z.enum(["firewall", "switch", "physical-server", "virtual-machine", "database"] as const, {
+    required_error: "Category is required",
+  }),
   location: z.string().trim().max(200).optional(),
 });
 
@@ -44,6 +47,7 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting }: DeviceF
     defaultValues: {
       name: device?.name || "",
       ip: device?.ip || "",
+      category: device?.category || "physical-server",
       location: device?.location || "",
     },
   });
@@ -74,6 +78,31 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting }: DeviceF
               <FormControl>
                 <Input placeholder="192.168.1.10 or example.com" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="firewall">Firewall</SelectItem>
+                  <SelectItem value="switch">Switch</SelectItem>
+                  <SelectItem value="physical-server">Physical Server</SelectItem>
+                  <SelectItem value="virtual-machine">Virtual Machine</SelectItem>
+                  <SelectItem value="database">Database</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
