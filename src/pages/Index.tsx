@@ -125,25 +125,25 @@ const Index = () => {
           )}
         </div>
 
-        {/* API Integration Info */}
+        {/* Configuration Info */}
         <div className="mt-12 p-6 bg-muted/30 rounded-lg border border-border">
-          <h3 className="font-semibold text-foreground mb-2">API Integration</h3>
+          <h3 className="font-semibold text-foreground mb-2">Configuration</h3>
           <p className="text-sm text-muted-foreground mb-3">
-            This dashboard is ready to connect to your PHP/Python backend. Update the <code className="bg-background px-1.5 py-0.5 rounded text-xs font-mono">fetchDevices()</code> function in <code className="bg-background px-1.5 py-0.5 rounded text-xs font-mono">src/utils/mockData.ts</code> to point to your API endpoint.
+            Devices are loaded from <code className="bg-background px-1.5 py-0.5 rounded text-xs font-mono">public/devices.json</code>. Edit this file to add, remove, or update monitored devices. The dashboard auto-refreshes every 30 seconds.
           </p>
           <div className="bg-background p-4 rounded font-mono text-xs overflow-x-auto">
             <pre className="text-muted-foreground">
-{`// Expected API Response Format:
+{`// Device Format in public/devices.json:
 [
   {
-    "id": "string",
-    "name": "string",
-    "ip": "string",
+    "id": "unique-id",
+    "name": "Device Name",
+    "ip": "192.168.1.10",
     "status": "online" | "offline" | "warning",
-    "responseTime": number, // milliseconds
-    "lastCheck": "ISO timestamp",
-    "uptime": number, // percentage
-    "location": "string" (optional)
+    "responseTime": 12, // milliseconds (optional)
+    "lastCheck": "2025-11-26T10:30:00.000Z",
+    "uptime": 99.98, // percentage (optional)
+    "location": "Data Center A" (optional)
   }
 ]`}
             </pre>
