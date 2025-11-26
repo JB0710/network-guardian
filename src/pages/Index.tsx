@@ -4,16 +4,18 @@ import { StatsCard } from "@/components/StatsCard";
 import { DeviceManagement } from "@/components/DeviceManagement";
 import { Device, NetworkStats } from "@/types/device";
 import { calculateStats, fetchDevices } from "@/utils/mockData";
-import { Activity, Server, AlertTriangle, Gauge } from "lucide-react";
+import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [stats, setStats] = useState<NetworkStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [apiConnected, setApiConnected] = useState<boolean | null>(null);
 
   const loadDevices = async () => {
     setLoading(true);
@@ -29,11 +31,33 @@ const Index = () => {
     }
   };
 
+  const checkApiConnection = async () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl) {
+      setApiConnected(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${apiUrl}/api/health`, { 
+        method: 'GET',
+        signal: AbortSignal.timeout(5000)
+      });
+      setApiConnected(response.ok);
+    } catch {
+      setApiConnected(false);
+    }
+  };
+
   useEffect(() => {
     loadDevices();
+    checkApiConnection();
     
     // Auto-refresh every 30 seconds
-    const interval = setInterval(loadDevices, 30000);
+    const interval = setInterval(() => {
+      loadDevices();
+      checkApiConnection();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -52,16 +76,36 @@ const Index = () => {
                 Last updated: {lastUpdate.toLocaleTimeString()}
               </p>
             </div>
-            <Button
-              onClick={loadDevices}
-              disabled={loading}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-3">
+              {apiConnected !== null && (
+                <Badge 
+                  variant={apiConnected ? "default" : "secondary"}
+                  className="gap-1.5"
+                >
+                  {apiConnected ? (
+                    <>
+                      <Wifi className="h-3 w-3" />
+                      API Connected
+                    </>
+                  ) : (
+                    <>
+                      <WifiOff className="h-3 w-3" />
+                      API Disconnected
+                    </>
+                  )}
+                </Badge>
+              )}
+              <Button
+                onClick={loadDevices}
+                disabled={loading}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            </div>
           </div>
         </div>
       </header>
