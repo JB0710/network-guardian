@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Device } from "@/types/device";
+import { Device, DeviceCategory } from "@/types/device";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -66,7 +66,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     checkBackend();
   }, []);
 
-  const handleAdd = async (data: { name: string; ip: string; location?: string }) => {
+  const handleAdd = async (data: { name: string; ip: string; category: DeviceCategory; location?: string }) => {
     setIsSubmitting(true);
     try {
       await addDevice(data);
@@ -87,7 +87,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     }
   };
 
-  const handleEdit = async (data: { name: string; ip: string; location?: string }) => {
+  const handleEdit = async (data: { name: string; ip: string; category: DeviceCategory; location?: string }) => {
     if (!editDevice) return;
     setIsSubmitting(true);
     try {
@@ -162,6 +162,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
               <TableHead>Name</TableHead>
               <TableHead>IP Address</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Location</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -169,41 +170,52 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
           <TableBody>
             {devices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                   No devices configured. Add your first device to start monitoring.
                 </TableCell>
               </TableRow>
             ) : (
-              devices.map((device) => (
-                <TableRow key={device.id}>
-                  <TableCell className="font-medium">{device.name}</TableCell>
-                  <TableCell className="font-mono text-sm">{device.ip}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={device.status} />
-                  </TableCell>
-                  <TableCell>{device.location || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setEditDevice(device)}
-                        disabled={!isBackendAvailable}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteDeviceId(device.id)}
-                        disabled={!isBackendAvailable}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+              devices.map((device) => {
+                const categoryLabels: Record<DeviceCategory, string> = {
+                  "firewall": "Firewall",
+                  "switch": "Switch",
+                  "physical-server": "Physical Server",
+                  "virtual-machine": "Virtual Machine",
+                  "database": "Database"
+                };
+                
+                return (
+                  <TableRow key={device.id}>
+                    <TableCell className="font-medium">{device.name}</TableCell>
+                    <TableCell className="font-mono text-sm">{device.ip}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={device.status} />
+                    </TableCell>
+                    <TableCell>{categoryLabels[device.category]}</TableCell>
+                    <TableCell>{device.location || "-"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditDevice(device)}
+                          disabled={!isBackendAvailable}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteDeviceId(device.id)}
+                          disabled={!isBackendAvailable}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

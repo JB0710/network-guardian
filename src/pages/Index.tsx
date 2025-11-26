@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { DeviceCard } from "@/components/DeviceCard";
 import { StatsCard } from "@/components/StatsCard";
 import { DeviceManagement } from "@/components/DeviceManagement";
-import { Device, NetworkStats } from "@/types/device";
+import { Device, NetworkStats, DeviceCategory } from "@/types/device";
 import { calculateStats, fetchDevices } from "@/utils/mockData";
 import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -154,30 +154,44 @@ const Index = () => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Server className="h-5 w-5" />
-                Monitored Devices
-              </h2>
-              
-              {loading && devices.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  Loading devices...
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {devices.map((device) => (
-                    <DeviceCard key={device.id} device={device} />
-                  ))}
-                </div>
-              )}
+            {loading && devices.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Loading devices...
+              </div>
+            ) : !loading && devices.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                No devices found. Add devices in the Manage Devices tab.
+              </div>
+            ) : (
+              <>
+                {(["firewall", "switch", "physical-server", "virtual-machine", "database"] as DeviceCategory[]).map((category) => {
+                  const categoryDevices = devices.filter(d => d.category === category);
+                  if (categoryDevices.length === 0) return null;
 
-              {!loading && devices.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  No devices found. Add devices in the Manage Devices tab.
-                </div>
-              )}
-            </div>
+                  const categoryLabels: Record<DeviceCategory, string> = {
+                    "firewall": "Firewalls",
+                    "switch": "Switches",
+                    "physical-server": "Physical Servers",
+                    "virtual-machine": "Virtual Machines",
+                    "database": "Databases"
+                  };
+
+                  return (
+                    <div key={category}>
+                      <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <Server className="h-5 w-5" />
+                        {categoryLabels[category]}
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        {categoryDevices.map((device) => (
+                          <DeviceCard key={device.id} device={device} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </TabsContent>
 
           {/* Manage Devices Tab */}
