@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Device } from "@/types/device";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -42,7 +44,27 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
   const [editDevice, setEditDevice] = useState<Device | null>(null);
   const [deleteDeviceId, setDeleteDeviceId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBackendAvailable, setIsBackendAvailable] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const checkBackend = async () => {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (!apiUrl) {
+        setIsBackendAvailable(false);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${apiUrl}/api/health`);
+        setIsBackendAvailable(response.ok);
+      } catch {
+        setIsBackendAvailable(false);
+      }
+    };
+    
+    checkBackend();
+  }, []);
 
   const handleAdd = async (data: { name: string; ip: string; location?: string }) => {
     setIsSubmitting(true);
@@ -101,7 +123,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete device. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to delete device. Make sure the backend is running.",
         variant: "destructive",
       });
     } finally {
@@ -111,9 +133,23 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
 
   return (
     <div className="space-y-4">
+      {!isBackendAvailable && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Backend Not Connected</AlertTitle>
+          <AlertDescription>
+            Device management requires a backend connection. Please set VITE_API_URL in your .env file and ensure the backend is running at that address.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-foreground">Manage Devices</h2>
-        <Button onClick={() => setIsAddOpen(true)} className="gap-2">
+        <Button 
+          onClick={() => setIsAddOpen(true)} 
+          className="gap-2"
+          disabled={!isBackendAvailable}
+        >
           <Plus className="h-4 w-4" />
           Add Device
         </Button>
@@ -152,6 +188,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
                         variant="ghost"
                         size="icon"
                         onClick={() => setEditDevice(device)}
+                        disabled={!isBackendAvailable}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -159,6 +196,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeleteDeviceId(device.id)}
+                        disabled={!isBackendAvailable}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
