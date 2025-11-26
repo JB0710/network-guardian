@@ -24,21 +24,41 @@ export const calculateStats = (devices: Device[]): NetworkStats => {
   };
 };
 
-// Fetch devices from backend API
+// Fetch devices from backend API with fallback to JSON file
 export const fetchDevices = async (): Promise<Device[]> => {
+  // Try backend API first
   try {
-    // Use environment variable or default to localhost for development
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/devices`);
+    const apiUrl = import.meta.env.VITE_API_URL;
+    
+    // Only try API if VITE_API_URL is explicitly set
+    if (apiUrl) {
+      const response = await fetch(`${apiUrl}/api/devices`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch devices: ${response.statusText}`);
+      }
+      
+      const devices = await response.json();
+      console.log('Loaded devices from backend API');
+      return devices;
+    }
+  } catch (error) {
+    console.warn('Backend API not available, falling back to devices.json:', error);
+  }
+  
+  // Fallback to JSON file
+  try {
+    const response = await fetch('/devices.json');
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch devices: ${response.statusText}`);
+      throw new Error(`Failed to fetch devices.json: ${response.statusText}`);
     }
     
     const devices = await response.json();
+    console.log('Loaded devices from devices.json');
     return devices;
   } catch (error) {
-    console.error('Error loading devices from backend:', error);
+    console.error('Error loading devices from JSON file:', error);
     throw error;
   }
 };
