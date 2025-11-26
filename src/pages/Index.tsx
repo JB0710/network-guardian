@@ -4,11 +4,20 @@ import { StatsCard } from "@/components/StatsCard";
 import { DeviceManagement } from "@/components/DeviceManagement";
 import { Device, NetworkStats, DeviceCategory } from "@/types/device";
 import { calculateStats, fetchDevices } from "@/utils/mockData";
-import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff } from "lucide-react";
+import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { StatusBadge } from "@/components/StatusBadge";
 
 const Index = () => {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -16,6 +25,7 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [apiConnected, setApiConnected] = useState<boolean | null>(null);
+  const [isCompactView, setIsCompactView] = useState(false);
 
   const loadDevices = async () => {
     setLoading(true);
@@ -147,10 +157,31 @@ const Index = () => {
 
         {/* Tabs for Dashboard and Management */}
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="manage">Manage Devices</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="manage">Manage Devices</TabsTrigger>
+            </TabsList>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsCompactView(!isCompactView)}
+              className="gap-2"
+            >
+              {isCompactView ? (
+                <>
+                  <LayoutGrid className="h-4 w-4" />
+                  Grid View
+                </>
+              ) : (
+                <>
+                  <List className="h-4 w-4" />
+                  Compact View
+                </>
+              )}
+            </Button>
+          </div>
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
@@ -162,6 +193,70 @@ const Index = () => {
               <div className="text-center py-12 text-muted-foreground">
                 No devices found. Add devices in the Manage Devices tab.
               </div>
+            ) : isCompactView ? (
+              <>
+                {(["firewall", "switch", "physical-server", "virtual-machine", "database"] as DeviceCategory[]).map((category) => {
+                  const categoryDevices = devices.filter(d => d.category === category);
+                  if (categoryDevices.length === 0) return null;
+
+                  const categoryLabels: Record<DeviceCategory, string> = {
+                    "firewall": "Firewalls",
+                    "switch": "Switches",
+                    "physical-server": "Physical Servers",
+                    "virtual-machine": "Virtual Machines",
+                    "database": "Databases"
+                  };
+
+                  return (
+                    <div key={category} className="mb-6">
+                      <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <Server className="h-4 w-4" />
+                        {categoryLabels[category]}
+                      </h2>
+                      <div className="rounded-lg border border-border bg-card">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Name</TableHead>
+                              <TableHead>IP Address</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Response</TableHead>
+                              <TableHead>Uptime</TableHead>
+                              <TableHead>Location</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {categoryDevices.map((device) => (
+                              <TableRow key={device.id}>
+                                <TableCell className="font-medium">{device.name}</TableCell>
+                                <TableCell className="font-mono text-sm">{device.ip}</TableCell>
+                                <TableCell>
+                                  <StatusBadge status={device.status} />
+                                </TableCell>
+                                <TableCell>
+                                  {device.responseTime !== undefined && device.status === "online" ? (
+                                    <span className="font-mono text-sm">{device.responseTime}ms</span>
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {device.uptime !== undefined ? (
+                                    <span className="font-mono text-sm">{device.uptime.toFixed(2)}%</span>
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">{device.location || "-"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
             ) : (
               <>
                 {(["firewall", "switch", "physical-server", "virtual-machine", "database"] as DeviceCategory[]).map((category) => {
