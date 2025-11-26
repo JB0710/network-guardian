@@ -62,3 +62,68 @@ export const triggerPing = async (): Promise<Device[]> => {
     throw error;
   }
 };
+
+// Add a new device
+export const addDevice = async (deviceData: { name: string; ip: string; location?: string }): Promise<Device> => {
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/devices`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(deviceData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to add device: ${response.statusText}`);
+    }
+    
+    const device = await response.json();
+    return device;
+  } catch (error) {
+    console.error('Error adding device:', error);
+    throw error;
+  }
+};
+
+// Update a device
+export const updateDevice = async (id: string, deviceData: { name: string; ip: string; location?: string }): Promise<Device> => {
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/devices/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(deviceData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update device: ${response.statusText}`);
+    }
+    
+    const device = await response.json();
+    return device;
+  } catch (error) {
+    console.error('Error updating device:', error);
+    throw error;
+  }
+};
+
+// Delete a device
+export const deleteDevice = async (id: string): Promise<void> => {
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/devices/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete device: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting device:', error);
+    throw error;
+  }
+};

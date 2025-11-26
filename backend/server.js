@@ -167,6 +167,18 @@ app.post('/api/devices', (req, res) => {
   res.status(201).json(newDevice);
 });
 
+app.put('/api/devices/:id', (req, res) => {
+  const device = devices.find(d => d.id === req.params.id);
+  if (device) {
+    device.name = req.body.name || device.name;
+    device.ip = req.body.ip || device.ip;
+    device.location = req.body.location !== undefined ? req.body.location : device.location;
+    res.json(device);
+  } else {
+    res.status(404).json({ error: 'Device not found' });
+  }
+});
+
 app.delete('/api/devices/:id', (req, res) => {
   const index = devices.findIndex(d => d.id === req.params.id);
   if (index !== -1) {
