@@ -193,8 +193,8 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getCategoryIcon(device.category)}
-                      <span>{getSingularCategoryLabel(device.category)}</span>
+                      {getCategoryIcon(device.category || '')}
+                      <span>{device.category ? getSingularCategoryLabel(device.category) : 'Uncategorized'}</span>
                     </div>
                   </TableCell>
                   <TableCell>{device.location || "-"}</TableCell>
