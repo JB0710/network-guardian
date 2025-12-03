@@ -5,7 +5,7 @@ import { DeviceManagement } from "@/components/DeviceManagement";
 import { Device, NetworkStats } from "@/types/device";
 import { calculateStats, fetchDevices } from "@/utils/mockData";
 import { getCategoryLabel, getUniqueCategories } from "@/utils/categoryUtils";
-import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff, LayoutGrid, List, Globe, Lock, Lightbulb } from "lucide-react";
+import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff, LayoutGrid, List, Globe, Lock, Lightbulb, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +22,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Index = () => {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -198,13 +209,57 @@ const Index = () => {
                   )}
                 </Badge>
               )}
-              <Badge 
-                variant={!apiConnected ? "secondary" : blink1Connected ? "default" : "destructive"}
-                className="gap-1.5"
-              >
-                <Lightbulb className="h-3 w-3" />
-                {!apiConnected ? "Blink1 Unavailable" : blink1Connected ? "Blink1 Connected" : "Blink1 Disconnected"}
-              </Badge>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge 
+                      variant={!apiConnected ? "secondary" : blink1Connected ? "default" : "destructive"}
+                      className="gap-1.5 cursor-help"
+                    >
+                      <Lightbulb className="h-3 w-3" />
+                      {!apiConnected ? "Blink1 Unavailable" : blink1Connected ? "Blink1 Connected" : "Blink1 Disconnected"}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-medium">Blink1 LED Alert Server</p>
+                    <p className="text-xs text-muted-foreground">Visual alerts when devices go offline</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end">
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Blink1 API Endpoints</h4>
+                    <div className="text-xs space-y-2 font-mono">
+                      <div>
+                        <span className="text-primary">/blink1</span>
+                        <p className="text-muted-foreground font-sans">Status info & connected devices</p>
+                      </div>
+                      <div>
+                        <span className="text-primary">/blink1/fadeToRGB?rgb=#ff0000</span>
+                        <p className="text-muted-foreground font-sans">Fade to color</p>
+                      </div>
+                      <div>
+                        <span className="text-primary">/blink1/blink?rgb=#ff0000&repeats=3</span>
+                        <p className="text-muted-foreground font-sans">Blink a color</p>
+                      </div>
+                      <div>
+                        <span className="text-primary">/blink1/on</span> | <span className="text-primary">/blink1/off</span>
+                        <p className="text-muted-foreground font-sans">Turn on/off</p>
+                      </div>
+                      <div>
+                        <span className="text-primary">/blink1/red</span> | <span className="text-primary">/blink1/green</span> | <span className="text-primary">/blink1/blue</span>
+                        <p className="text-muted-foreground font-sans">Quick colors</p>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button
                 onClick={loadDevices}
                 disabled={loading}
