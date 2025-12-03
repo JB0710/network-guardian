@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Device } from "@/types/device";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Globe, Lock } from "lucide-react";
+import { AlertCircle, Globe, Lock, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -141,6 +141,37 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     return <Server className="h-4 w-4 text-muted-foreground" />;
   };
 
+  const handleExport = () => {
+    const exportData = devices.map(device => ({
+      id: device.id,
+      name: device.name,
+      ip: device.ip,
+      status: device.status,
+      category: device.category,
+      ...(device.vendor && { vendor: device.vendor }),
+      ...(device.responseTime !== undefined && { responseTime: device.responseTime }),
+      lastCheck: device.lastCheck,
+      ...(device.uptime !== undefined && { uptime: device.uptime }),
+      ...(device.location && { location: device.location }),
+    }));
+    
+    const jsonString = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'devices.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export successful",
+      description: `Exported ${devices.length} devices to devices.json`,
+    });
+  };
+
   return (
     <div className="space-y-4">
       {!isBackendAvailable && (
@@ -155,14 +186,25 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
 
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-foreground">Manage Devices</h2>
-        <Button 
-          onClick={() => setIsAddOpen(true)} 
-          className="gap-2"
-          disabled={!isBackendAvailable}
-        >
-          <Plus className="h-4 w-4" />
-          Add Device
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleExport}
+            variant="outline"
+            className="gap-2"
+            disabled={devices.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            Export JSON
+          </Button>
+          <Button 
+            onClick={() => setIsAddOpen(true)} 
+            className="gap-2"
+            disabled={!isBackendAvailable}
+          >
+            <Plus className="h-4 w-4" />
+            Add Device
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-card">
