@@ -6,6 +6,44 @@ const cron = require('node-cron');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Blink1 server configuration
+const BLINK1_SERVER_URL = process.env.BLINK1_SERVER_URL || 'http://localhost:8934';
+let isBlinking = false;
+
+// Trigger blink1 to blink red
+async function triggerBlink1Alert() {
+  if (isBlinking) return; // Already blinking
+  
+  try {
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=500&count=0`);
+    if (response.ok) {
+      isBlinking = true;
+      console.log('Blink1: Started red alert blinking');
+    } else {
+      console.error('Blink1: Failed to trigger alert -', response.status);
+    }
+  } catch (error) {
+    console.error('Blink1: Could not connect to blink1-server -', error.message);
+  }
+}
+
+// Stop blink1 alert (turn off or set to green)
+async function stopBlink1Alert() {
+  if (!isBlinking) return; // Not currently blinking
+  
+  try {
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/off`);
+    if (response.ok) {
+      isBlinking = false;
+      console.log('Blink1: Stopped alert, all devices online');
+    } else {
+      console.error('Blink1: Failed to stop alert -', response.status);
+    }
+  } catch (error) {
+    console.error('Blink1: Could not connect to blink1-server -', error.message);
+  }
+}
+
 app.use(cors());
 app.use(express.json());
 
@@ -140,6 +178,15 @@ async function pingAllDevices() {
   console.log('Starting ping cycle...');
   await Promise.all(devices.map(device => pingDevice(device)));
   console.log('Ping cycle completed');
+  
+  // Check if any devices are offline and trigger/stop blink1 accordingly
+  const offlineDevices = devices.filter(d => d.status === 'offline');
+  if (offlineDevices.length > 0) {
+    console.log(`${offlineDevices.length} device(s) offline: ${offlineDevices.map(d => d.name).join(', ')}`);
+    triggerBlink1Alert();
+  } else {
+    stopBlink1Alert();
+  }
 }
 
 // API Routes
