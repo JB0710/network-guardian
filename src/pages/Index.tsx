@@ -374,7 +374,7 @@ const Index = () => {
           </TabsContent>
 
           {/* Manage Devices Tab */}
-          <TabsContent value="manage">
+          <TabsContent value="manage" className="space-y-6">
             <DeviceManagement devices={devices} onDevicesChange={loadDevices} />
           </TabsContent>
         </Tabs>
