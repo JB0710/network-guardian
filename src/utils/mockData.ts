@@ -83,7 +83,7 @@ export const triggerPing = async (): Promise<Device[]> => {
 };
 
 // Add a new device
-export const addDevice = async (deviceData: { name: string; ip: string; category: string; location?: string }): Promise<Device> => {
+export const addDevice = async (deviceData: { name: string; ip: string; category: string; vendor?: string; location?: string }): Promise<Device> => {
   const apiUrl = import.meta.env.VITE_API_URL;
   if (!apiUrl) {
     throw new Error('Backend not configured. Please set VITE_API_URL.');
@@ -105,7 +105,7 @@ export const addDevice = async (deviceData: { name: string; ip: string; category
 };
 
 // Update a device
-export const updateDevice = async (id: string, deviceData: { name: string; ip: string; category: string; location?: string }): Promise<Device> => {
+export const updateDevice = async (id: string, deviceData: { name: string; ip: string; category: string; vendor?: string; location?: string }): Promise<Device> => {
   const apiUrl = import.meta.env.VITE_API_URL;
   if (!apiUrl) {
     throw new Error('Backend not configured. Please set VITE_API_URL.');

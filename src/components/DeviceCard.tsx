@@ -1,6 +1,7 @@
 import { Device } from "@/types/device";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "./StatusBadge";
+import { VendorLogo } from "./VendorLogo";
 import { Clock, Gauge, MapPin } from "lucide-react";
 
 interface DeviceCardProps {
@@ -16,9 +17,16 @@ export const DeviceCard = ({ device }: DeviceCardProps) => {
   return (
     <Card className="p-4 hover:border-primary/50 transition-all duration-200 bg-card/50 backdrop-blur">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="font-semibold text-base text-foreground mb-1">{device.name}</h3>
-          <p className="text-sm text-muted-foreground font-mono">{device.ip}</p>
+        <div className="flex items-start gap-3 flex-1">
+          {device.vendor && (
+            <div className="flex-shrink-0 mt-0.5">
+              <VendorLogo vendor={device.vendor} size={28} />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base text-foreground mb-1">{device.name}</h3>
+            <p className="text-sm text-muted-foreground font-mono">{device.ip}</p>
+          </div>
         </div>
         <StatusBadge status={device.status} showIcon={false} />
       </div>
