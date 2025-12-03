@@ -142,29 +142,43 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
   };
 
   const handleExport = () => {
-    const exportData = devices.map(device => ({
-      id: device.id,
-      name: device.name,
-      ip: device.ip,
-      status: device.status,
-      category: device.category,
-      ...(device.vendor && { vendor: device.vendor }),
-      ...(device.responseTime !== undefined && { responseTime: device.responseTime }),
-      lastCheck: device.lastCheck,
-      ...(device.uptime !== undefined && { uptime: device.uptime }),
-      ...(device.location && { location: device.location }),
-    }));
+    if (devices.length === 0) {
+      toast({
+        title: "No devices to export",
+        description: "Add some devices first before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = devices.map(device => {
+      const obj: Record<string, unknown> = {
+        id: device.id,
+        name: device.name,
+        ip: device.ip,
+        status: device.status,
+        category: device.category || "physical-server",
+      };
+      if (device.vendor) obj.vendor = device.vendor;
+      if (device.responseTime !== undefined) obj.responseTime = device.responseTime;
+      obj.lastCheck = device.lastCheck;
+      if (device.uptime !== undefined) obj.uptime = device.uptime;
+      if (device.location) obj.location = device.location;
+      return obj;
+    });
     
     const jsonString = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    
     const link = document.createElement('a');
-    link.href = url;
-    link.download = 'devices.json';
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'devices.json');
+    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(url);
     
     toast({
       title: "Export successful",
