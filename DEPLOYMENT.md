@@ -249,7 +249,7 @@ BLINK1_SERVER_URL=http://localhost:8934
 ### 6. Verify Connection
 
 ```bash
-curl http://localhost:8934/blink1/id
+curl http://localhost:8934/blink1
 ```
 
 ## Monitoring
