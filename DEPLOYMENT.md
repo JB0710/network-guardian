@@ -186,6 +186,72 @@ sudo apt install postgresql postgresql-contrib
 # Then modify server.js to use database instead of in-memory array
 ```
 
+## Blink1 Server Setup (Optional)
+
+If you want visual LED alerts when devices go offline, set up the blink1-server service.
+
+### 1. Install blink1-server
+
+```bash
+sudo npm install -g node-blink1-server
+```
+
+### 2. Create Systemd Service
+
+```bash
+sudo nano /etc/systemd/system/blink1-server.service
+```
+
+Add the following content:
+
+```ini
+[Unit]
+Description=Blink1 LED Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/npx blink1-server
+Restart=on-failure
+Environment=HOST=0.0.0.0
+Environment=PORT=8934
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### 3. Enable and Start Service
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable blink1-server
+sudo systemctl start blink1-server
+sudo systemctl status blink1-server
+```
+
+### 4. Configure Firewall (if needed)
+
+```bash
+sudo ufw allow 8934/tcp
+```
+
+### 5. Configure Backend
+
+Update the backend `.env` file with the blink1-server URL:
+
+```bash
+BLINK1_SERVER_URL=http://localhost:8934
+# Or if running on a different machine:
+# BLINK1_SERVER_URL=http://192.168.1.100:8934
+```
+
+### 6. Verify Connection
+
+```bash
+curl http://localhost:8934/blink1/id
+```
+
 ## Monitoring
 
 ### Check Backend Status
