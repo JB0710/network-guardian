@@ -256,6 +256,59 @@ const Index = () => {
                     </div>
                   );
                 })}
+                {/* Uncategorized devices */}
+                {(() => {
+                  const uncategorized = devices.filter(d => !d.category);
+                  if (uncategorized.length === 0) return null;
+                  return (
+                    <div className="mb-6">
+                      <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <Server className="h-4 w-4" />
+                        Uncategorized
+                      </h2>
+                      <div className="rounded-lg border border-border bg-card">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Name</TableHead>
+                              <TableHead>IP Address</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Response</TableHead>
+                              <TableHead>Uptime</TableHead>
+                              <TableHead>Location</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {uncategorized.map((device) => (
+                              <TableRow key={device.id}>
+                                <TableCell className="font-medium">{device.name}</TableCell>
+                                <TableCell className="font-mono text-sm">{device.ip}</TableCell>
+                                <TableCell>
+                                  <StatusBadge status={device.status} />
+                                </TableCell>
+                                <TableCell>
+                                  {device.responseTime !== undefined && device.status === "online" ? (
+                                    <span className="font-mono text-sm">{device.responseTime}ms</span>
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {device.uptime !== undefined ? (
+                                    <span className="font-mono text-sm">{device.uptime.toFixed(2)}%</span>
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">{device.location || "-"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  );
+                })()}
               </>
             ) : (
               <>
@@ -285,6 +338,24 @@ const Index = () => {
                     </div>
                   );
                 })}
+                {/* Uncategorized devices */}
+                {(() => {
+                  const uncategorized = devices.filter(d => !d.category);
+                  if (uncategorized.length === 0) return null;
+                  return (
+                    <div>
+                      <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <Server className="h-5 w-5" />
+                        Uncategorized
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        {uncategorized.map((device) => (
+                          <DeviceCard key={device.id} device={device} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </>
             )}
           </TabsContent>
