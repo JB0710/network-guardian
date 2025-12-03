@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { Device, DeviceCategory } from "@/types/device";
+import { useState, useEffect, useMemo } from "react";
+import { Device } from "@/types/device";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Globe, Lock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,9 +30,10 @@ import {
 } from "@/components/ui/table";
 import { DeviceForm } from "@/components/DeviceForm";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Server } from "lucide-react";
 import { addDevice, updateDevice, deleteDevice } from "@/utils/mockData";
 import { useToast } from "@/hooks/use-toast";
+import { getSingularCategoryLabel, getUniqueCategories } from "@/utils/categoryUtils";
 
 interface DeviceManagementProps {
   devices: Device[];
@@ -46,6 +47,8 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBackendAvailable, setIsBackendAvailable] = useState(false);
   const { toast } = useToast();
+
+  const customCategories = useMemo(() => getUniqueCategories(devices), [devices]);
 
   useEffect(() => {
     const checkBackend = async () => {
@@ -66,7 +69,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     checkBackend();
   }, []);
 
-  const handleAdd = async (data: { name: string; ip: string; category: DeviceCategory; location?: string }) => {
+  const handleAdd = async (data: { name: string; ip: string; category: string; location?: string }) => {
     setIsSubmitting(true);
     try {
       await addDevice(data);
@@ -87,7 +90,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     }
   };
 
-  const handleEdit = async (data: { name: string; ip: string; category: DeviceCategory; location?: string }) => {
+  const handleEdit = async (data: { name: string; ip: string; category: string; location?: string }) => {
     if (!editDevice) return;
     setIsSubmitting(true);
     try {
@@ -129,6 +132,12 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    if (category === 'dns-public') return <Globe className="h-4 w-4 text-blue-500" />;
+    if (category === 'dns-private') return <Lock className="h-4 w-4 text-orange-500" />;
+    return <Server className="h-4 w-4 text-muted-foreground" />;
   };
 
   return (
@@ -175,47 +184,42 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
                 </TableCell>
               </TableRow>
             ) : (
-              devices.map((device) => {
-                const categoryLabels: Record<DeviceCategory, string> = {
-                  "firewall": "Firewall",
-                  "switch": "Switch",
-                  "physical-server": "Physical Server",
-                  "virtual-machine": "Virtual Machine",
-                  "database": "Database"
-                };
-                
-                return (
-                  <TableRow key={device.id}>
-                    <TableCell className="font-medium">{device.name}</TableCell>
-                    <TableCell className="font-mono text-sm">{device.ip}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={device.status} />
-                    </TableCell>
-                    <TableCell>{categoryLabels[device.category]}</TableCell>
-                    <TableCell>{device.location || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditDevice(device)}
-                          disabled={!isBackendAvailable}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteDeviceId(device.id)}
-                          disabled={!isBackendAvailable}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              devices.map((device) => (
+                <TableRow key={device.id}>
+                  <TableCell className="font-medium">{device.name}</TableCell>
+                  <TableCell className="font-mono text-sm">{device.ip}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={device.status} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getCategoryIcon(device.category)}
+                      <span>{getSingularCategoryLabel(device.category)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{device.location || "-"}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditDevice(device)}
+                        disabled={!isBackendAvailable}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteDeviceId(device.id)}
+                        disabled={!isBackendAvailable}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
@@ -234,6 +238,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
             onSubmit={handleAdd}
             onCancel={() => setIsAddOpen(false)}
             isSubmitting={isSubmitting}
+            customCategories={customCategories}
           />
         </DialogContent>
       </Dialog>
@@ -253,6 +258,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
               onSubmit={handleEdit}
               onCancel={() => setEditDevice(null)}
               isSubmitting={isSubmitting}
+              customCategories={customCategories}
             />
           )}
         </DialogContent>

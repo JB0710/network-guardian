@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,7 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Device, DeviceCategory } from "@/types/device";
+import { Device } from "@/types/device";
+import { Plus } from "lucide-react";
+
+const PRESET_CATEGORIES = [
+  { value: "firewall", label: "Firewall" },
+  { value: "switch", label: "Switch" },
+  { value: "physical-server", label: "Physical Server" },
+  { value: "virtual-machine", label: "Virtual Machine" },
+  { value: "database", label: "Database" },
+  { value: "dns-public", label: "DNS Server (Public)" },
+  { value: "dns-private", label: "DNS Server (Private)" },
+];
 
 const deviceSchema = z.object({
   name: z.string().trim().min(1, "Device name is required").max(100),
@@ -26,9 +38,7 @@ const deviceSchema = z.object({
     /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     "Invalid IP address or hostname"
   ),
-  category: z.enum(["firewall", "switch", "physical-server", "virtual-machine", "database"] as const, {
-    required_error: "Category is required",
-  }),
+  category: z.string().min(1, "Category is required"),
   location: z.string().trim().max(200).optional(),
 });
 
@@ -39,9 +49,20 @@ interface DeviceFormProps {
   onSubmit: (data: DeviceFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  customCategories?: string[];
 }
 
-export function DeviceForm({ device, onSubmit, onCancel, isSubmitting }: DeviceFormProps) {
+export function DeviceForm({ device, onSubmit, onCancel, isSubmitting, customCategories = [] }: DeviceFormProps) {
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [customCategoryInput, setCustomCategoryInput] = useState("");
+
+  const allCategories = [
+    ...PRESET_CATEGORIES,
+    ...customCategories
+      .filter(c => !PRESET_CATEGORIES.some(p => p.value === c))
+      .map(c => ({ value: c, label: c.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') }))
+  ];
+
   const form = useForm<DeviceFormData>({
     resolver: zodResolver(deviceSchema),
     defaultValues: {
@@ -51,6 +72,15 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting }: DeviceF
       location: device?.location || "",
     },
   });
+
+  const handleAddCustomCategory = () => {
+    if (customCategoryInput.trim()) {
+      const value = customCategoryInput.trim().toLowerCase().replace(/\s+/g, '-');
+      form.setValue('category', value);
+      setCustomCategoryInput("");
+      setIsAddingCustom(false);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -89,20 +119,48 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting }: DeviceF
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="firewall">Firewall</SelectItem>
-                  <SelectItem value="switch">Switch</SelectItem>
-                  <SelectItem value="physical-server">Physical Server</SelectItem>
-                  <SelectItem value="virtual-machine">Virtual Machine</SelectItem>
-                  <SelectItem value="database">Database</SelectItem>
-                </SelectContent>
-              </Select>
+              {isAddingCustom ? (
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Enter custom category"
+                    value={customCategoryInput}
+                    onChange={(e) => setCustomCategoryInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustomCategory())}
+                  />
+                  <Button type="button" size="sm" onClick={handleAddCustomCategory}>
+                    Add
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setIsAddingCustom(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {allCategories.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    type="button" 
+                    size="icon" 
+                    variant="outline"
+                    onClick={() => setIsAddingCustom(true)}
+                    title="Add custom category"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -134,3 +192,5 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting }: DeviceF
     </Form>
   );
 }
+
+export { PRESET_CATEGORIES };

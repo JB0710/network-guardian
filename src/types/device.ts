@@ -1,6 +1,6 @@
 export type DeviceStatus = "online" | "offline" | "warning";
 
-export type DeviceCategory = "firewall" | "switch" | "physical-server" | "virtual-machine" | "database";
+export type DeviceCategory = "firewall" | "switch" | "physical-server" | "virtual-machine" | "database" | "dns-public" | "dns-private" | string;
 
 export interface Device {
   id: string;
