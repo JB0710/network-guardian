@@ -158,15 +158,16 @@ app.get('/api/devices/:id', (req, res) => {
 
 app.post('/api/devices', (req, res) => {
   const newDevice = {
-    id: String(devices.length + 1),
+    id: String(Date.now()),
     name: req.body.name,
     ip: req.body.ip,
     status: 'unknown',
     category: req.body.category || 'physical-server',
+    vendor: req.body.vendor || undefined,
     responseTime: 0,
     lastCheck: new Date().toISOString(),
     uptime: 0,
-    location: req.body.location || 'Unknown',
+    location: req.body.location || undefined,
     successfulPings: 0,
     totalPings: 0
   };
@@ -180,6 +181,7 @@ app.put('/api/devices/:id', (req, res) => {
     device.name = req.body.name || device.name;
     device.ip = req.body.ip || device.ip;
     device.category = req.body.category || device.category;
+    device.vendor = req.body.vendor !== undefined ? req.body.vendor : device.vendor;
     device.location = req.body.location !== undefined ? req.body.location : device.location;
     res.json(device);
   } else {
