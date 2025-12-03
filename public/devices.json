@@ -1,73 +1,26 @@
 [
   {
     "id": "1",
-    "name": "Web Server",
-    "ip": "192.168.1.10",
+    "name": "SonicWall",
+    "ip": "172.16.100.1",
     "status": "online",
-    "category": "physical-server",
-    "vendor": "dell",
-    "responseTime": 12,
-    "lastCheck": "2025-11-26T10:30:00.000Z",
-    "uptime": 99.98,
-    "location": "Data Center A"
+    "category": "Firewall",
+    "vendor": "SonicWall",
+    "responseTime": 1,
+    "lastCheck": "2025-12-03T21:51:30.561Z",
+    "uptime": 100,
+    "location": "IT Office"
   },
   {
     "id": "2",
-    "name": "Primary Database",
-    "ip": "192.168.1.20",
+    "name": "Docker Server",
+    "ip": "128.254.164.246",
     "status": "online",
-    "category": "database",
-    "vendor": "mssql",
-    "responseTime": 8,
-    "lastCheck": "2025-11-26T10:30:00.000Z",
-    "uptime": 99.95,
-    "location": "Data Center A"
-  },
-  {
-    "id": "3",
-    "name": "Mail Server VM",
-    "ip": "192.168.1.30",
-    "status": "warning",
-    "category": "virtual-machine",
-    "vendor": "vmware",
-    "responseTime": 156,
-    "lastCheck": "2025-11-26T10:30:00.000Z",
-    "uptime": 98.45,
-    "location": "Data Center B"
-  },
-  {
-    "id": "4",
-    "name": "Core Switch",
-    "ip": "192.168.1.40",
-    "status": "offline",
-    "category": "switch",
-    "vendor": "cisco",
-    "lastCheck": "2025-11-26T10:25:00.000Z",
-    "uptime": 97.23,
-    "location": "Data Center A"
-  },
-  {
-    "id": "5",
-    "name": "Edge Firewall",
-    "ip": "192.168.1.50",
-    "status": "online",
-    "category": "firewall",
-    "vendor": "fortinet",
-    "responseTime": 15,
-    "lastCheck": "2025-11-26T10:30:00.000Z",
-    "uptime": 99.87,
-    "location": "Data Center B"
-  },
-  {
-    "id": "6",
-    "name": "App VM Cluster",
-    "ip": "192.168.1.60",
-    "status": "online",
-    "category": "virtual-machine",
-    "vendor": "docker",
-    "responseTime": 5,
-    "lastCheck": "2025-11-26T10:30:00.000Z",
-    "uptime": 99.99,
-    "location": "Data Center A"
+    "category": "physical-server",
+    "vendor": "Docker",
+    "responseTime": 0,
+    "lastCheck": "2025-12-03T21:51:30.562Z",
+    "uptime": 100,
+    "location": "IT Office"
   }
 ]
