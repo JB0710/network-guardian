@@ -6,8 +6,13 @@ const cron = require('node-cron');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Blink1 server configuration
-const BLINK1_SERVER_URL = process.env.BLINK1_SERVER_URL || 'http://localhost:8934';
+// Blink1 server configuration - supports multiple servers (comma-separated)
+// Example: BLINK1_SERVER_URLS=http://localhost:8934,http://localhost:8935,http://localhost:8936
+const BLINK1_SERVER_URLS = (process.env.BLINK1_SERVER_URLS || process.env.BLINK1_SERVER_URL || 'http://localhost:8934')
+  .split(',')
+  .map(url => url.trim())
+  .filter(url => url.length > 0);
+
 let isBlinking = false;
 let blink1Enabled = true; // Toggle for enabling/disabling blink1 alerts
 
@@ -18,63 +23,76 @@ let blink1Pattern = {
   repeats: 8
 };
 
-// Build pattern URL from configuration
-function buildPatternUrl() {
+console.log(`Blink1: Configured ${BLINK1_SERVER_URLS.length} server(s):`, BLINK1_SERVER_URLS);
+
+// Build pattern query string from configuration
+function buildPatternQuery() {
   const colorsParam = blink1Pattern.colors.map(c => encodeURIComponent(c)).join(',');
-  return `${BLINK1_SERVER_URL}/blink1/pattern?rgb=${colorsParam}&time=${blink1Pattern.time}&repeats=${blink1Pattern.repeats}`;
+  return `/blink1/pattern?rgb=${colorsParam}&time=${blink1Pattern.time}&repeats=${blink1Pattern.repeats}`;
 }
 
-// Trigger blink1 alert using configured pattern
+// Send request to all blink1 servers in parallel
+async function sendToAllServers(endpoint) {
+  const results = await Promise.allSettled(
+    BLINK1_SERVER_URLS.map(async (serverUrl) => {
+      try {
+        const response = await fetch(`${serverUrl}${endpoint}`);
+        return { serverUrl, ok: response.ok, status: response.status };
+      } catch (error) {
+        return { serverUrl, ok: false, error: error.message };
+      }
+    })
+  );
+  
+  const successes = results.filter(r => r.status === 'fulfilled' && r.value.ok).length;
+  const failures = results.filter(r => r.status === 'rejected' || !r.value.ok).length;
+  
+  return { successes, failures, total: BLINK1_SERVER_URLS.length, results };
+}
+
+// Trigger blink1 alert on all servers using configured pattern
 async function triggerBlink1Alert() {
   if (isBlinking || !blink1Enabled) return; // Already blinking or disabled
   
-  try {
-    const patternUrl = buildPatternUrl();
-    const response = await fetch(patternUrl);
-    if (response.ok) {
-      isBlinking = true;
-      console.log('Blink1: Started red alert blinking');
-    } else {
-      console.error('Blink1: Failed to trigger alert -', response.status);
-    }
-  } catch (error) {
-    console.error('Blink1: Could not connect to blink1-server -', error.message);
+  const patternQuery = buildPatternQuery();
+  const { successes, failures, total } = await sendToAllServers(patternQuery);
+  
+  if (successes > 0) {
+    isBlinking = true;
+    console.log(`Blink1: Alert triggered on ${successes}/${total} devices`);
+  }
+  if (failures > 0) {
+    console.error(`Blink1: Failed to trigger on ${failures}/${total} devices`);
   }
 }
 
-// Stop blink1 alert
+// Stop blink1 alert on all servers
 async function stopBlink1Alert() {
   if (!isBlinking) return; // Not currently blinking
   
-  try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/off`);
-    if (response.ok) {
-      isBlinking = false;
-      console.log('Blink1: Stopped alert');
-    } else {
-      console.error('Blink1: Failed to stop alert -', response.status);
-    }
-  } catch (error) {
-    console.error('Blink1: Could not connect to blink1-server -', error.message);
+  const { successes, failures, total } = await sendToAllServers('/blink1/off');
+  
+  if (successes > 0) {
+    isBlinking = false;
+    console.log(`Blink1: Stopped alert on ${successes}/${total} devices`);
+  }
+  if (failures > 0) {
+    console.error(`Blink1: Failed to stop on ${failures}/${total} devices`);
   }
 }
 
-// Test blink1 - blink red 3 times
-// Uses correct params: time in seconds, 'repeats' not 'count'
+// Test blink1 - blink red 3 times on all servers
 async function testBlink1() {
-  try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=0.3&repeats=3`);
-    if (response.ok) {
-      console.log('Blink1: Test triggered');
-      return true;
-    } else {
-      console.error('Blink1: Test failed -', response.status);
-      return false;
-    }
-  } catch (error) {
-    console.error('Blink1: Could not connect to blink1-server -', error.message);
-    return false;
+  const { successes, failures, total } = await sendToAllServers('/blink1/blink?rgb=%23FF0000&time=0.3&repeats=3');
+  
+  if (successes > 0) {
+    console.log(`Blink1: Test triggered on ${successes}/${total} devices`);
   }
+  if (failures > 0) {
+    console.error(`Blink1: Test failed on ${failures}/${total} devices`);
+  }
+  
+  return successes > 0;
 }
 
 app.use(cors());
@@ -284,21 +302,38 @@ app.post('/api/ping-now', async (req, res) => {
   res.json({ message: 'Ping completed', devices });
 });
 
-// Check blink1 server connection
-async function checkBlink1Connection() {
-  try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1`, {
-      signal: AbortSignal.timeout(3000)
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
+// Check blink1 server connections (all servers)
+async function checkBlink1Connections() {
+  const results = await Promise.allSettled(
+    BLINK1_SERVER_URLS.map(async (serverUrl) => {
+      try {
+        const response = await fetch(`${serverUrl}/blink1`, {
+          signal: AbortSignal.timeout(3000)
+        });
+        return { serverUrl, connected: response.ok };
+      } catch {
+        return { serverUrl, connected: false };
+      }
+    })
+  );
+  
+  return results.map(r => r.status === 'fulfilled' ? r.value : { serverUrl: 'unknown', connected: false });
 }
 
 app.get('/api/health', async (req, res) => {
-  const blink1Connected = await checkBlink1Connection();
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), blink1Enabled, blink1Connected });
+  const blink1Servers = await checkBlink1Connections();
+  const blink1Connected = blink1Servers.some(s => s.connected);
+  const connectedCount = blink1Servers.filter(s => s.connected).length;
+  
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(), 
+    blink1Enabled, 
+    blink1Connected,
+    blink1Servers,
+    blink1ServerCount: BLINK1_SERVER_URLS.length,
+    blink1ConnectedCount: connectedCount
+  });
 });
 
 // Blink1 toggle endpoint
@@ -342,23 +377,19 @@ app.post('/api/blink1/pattern', (req, res) => {
   res.json({ pattern: blink1Pattern });
 });
 
-// Test pattern with custom config (without saving)
+// Test pattern with custom config (without saving) - sends to all servers
 app.post('/api/blink1/test-pattern', async (req, res) => {
   const { pattern } = req.body;
-  try {
-    const testPattern = pattern || blink1Pattern;
-    const colorsParam = testPattern.colors.map(c => encodeURIComponent(c)).join(',');
-    const url = `${BLINK1_SERVER_URL}/blink1/pattern?rgb=${colorsParam}&time=${testPattern.time}&repeats=${testPattern.repeats}`;
-    
-    const response = await fetch(url);
-    if (response.ok) {
-      res.json({ success: true, message: 'Pattern test triggered' });
-    } else {
-      res.json({ success: false, message: 'Failed to trigger pattern test' });
-    }
-  } catch (error) {
-    console.error('Blink1: Test pattern failed -', error.message);
-    res.json({ success: false, message: 'Could not connect to blink1-server' });
+  const testPattern = pattern || blink1Pattern;
+  const colorsParam = testPattern.colors.map(c => encodeURIComponent(c)).join(',');
+  const endpoint = `/blink1/pattern?rgb=${colorsParam}&time=${testPattern.time}&repeats=${testPattern.repeats}`;
+  
+  const { successes, total } = await sendToAllServers(endpoint);
+  
+  if (successes > 0) {
+    res.json({ success: true, message: `Pattern test triggered on ${successes}/${total} devices` });
+  } else {
+    res.json({ success: false, message: 'Failed to trigger pattern test on any device' });
   }
 });
 
@@ -368,20 +399,16 @@ app.post('/api/blink1/test', async (req, res) => {
   res.json({ success, message: success ? 'Test blink triggered on all devices' : 'Failed to trigger test blink' });
 });
 
-// Turn off all blink1 devices endpoint
+// Turn off all blink1 devices endpoint - sends to all servers
 app.post('/api/blink1/off', async (req, res) => {
-  try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/off`);
-    if (response.ok) {
-      isBlinking = false;
-      console.log('Blink1: Manually turned off');
-      res.json({ success: true, message: 'Blink1 devices turned off' });
-    } else {
-      res.json({ success: false, message: 'Failed to turn off Blink1' });
-    }
-  } catch (error) {
-    console.error('Blink1: Could not turn off -', error.message);
-    res.json({ success: false, message: 'Could not connect to blink1-server' });
+  const { successes, total } = await sendToAllServers('/blink1/off');
+  
+  if (successes > 0) {
+    isBlinking = false;
+    console.log(`Blink1: Turned off ${successes}/${total} devices`);
+    res.json({ success: true, message: `Turned off ${successes}/${total} Blink1 devices` });
+  } else {
+    res.json({ success: false, message: 'Failed to turn off any Blink1 devices' });
   }
 });
 
