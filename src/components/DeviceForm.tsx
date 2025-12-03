@@ -85,9 +85,18 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting, customCat
     }
   };
 
+  const handleFormSubmit = (data: DeviceFormData) => {
+    // Clean up vendor field - remove "none" placeholder
+    const cleanedData = {
+      ...data,
+      vendor: data.vendor && data.vendor !== "none" ? data.vendor : undefined,
+    };
+    onSubmit(cleanedData);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
