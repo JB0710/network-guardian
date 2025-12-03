@@ -153,21 +153,18 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
       return;
     }
 
-    const exportData = devices.map(device => {
-      const obj: Record<string, unknown> = {
-        id: device.id,
-        name: device.name,
-        ip: device.ip,
-        status: device.status,
-        category: device.category || "physical-server",
-      };
-      if (device.vendor) obj.vendor = device.vendor;
-      if (device.responseTime !== undefined) obj.responseTime = device.responseTime;
-      obj.lastCheck = device.lastCheck;
-      if (device.uptime !== undefined) obj.uptime = device.uptime;
-      if (device.location) obj.location = device.location;
-      return obj;
-    });
+    const exportData = devices.map(device => ({
+      id: device.id,
+      name: device.name,
+      ip: device.ip,
+      status: device.status,
+      category: device.category || "physical-server",
+      vendor: device.vendor || "",
+      responseTime: device.responseTime,
+      lastCheck: device.lastCheck,
+      uptime: device.uptime,
+      location: device.location || "",
+    }));
     
     const jsonString = JSON.stringify(exportData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
