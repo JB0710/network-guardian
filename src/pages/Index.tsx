@@ -6,6 +6,7 @@ import { Device, NetworkStats } from "@/types/device";
 import { calculateStats, fetchDevices } from "@/utils/mockData";
 import { getCategoryLabel, getUniqueCategories } from "@/utils/categoryUtils";
 import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff, LayoutGrid, List, Globe, Lock, Lightbulb, HelpCircle } from "lucide-react";
+import { Blink1Config } from "@/components/Blink1Config";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -252,6 +253,7 @@ const Index = () => {
                   >
                     Off
                   </Button>
+                  <Blink1Config apiConnected={apiConnected} />
                 </div>
               )}
               {apiConnected !== null && (
