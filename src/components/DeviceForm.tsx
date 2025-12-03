@@ -175,21 +175,26 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting, customCat
           render={({ field }) => (
             <FormItem>
               <FormLabel>Vendor/Brand (Optional)</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value || ""}>
+              <Select 
+                onValueChange={(val) => field.onChange(val === "none" ? "" : val)} 
+                value={field.value || "none"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a vendor">
-                      {field.value && (
+                      {field.value ? (
                         <div className="flex items-center gap-2">
                           <VendorLogo vendor={field.value} size={18} />
                           <span>{PRESET_VENDORS.find(v => v.value === field.value)?.label || field.value}</span>
                         </div>
+                      ) : (
+                        "None"
                       )}
                     </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {PRESET_VENDORS.map((vendor) => (
                     <SelectItem key={vendor.value} value={vendor.value}>
                       <div className="flex items-center gap-2">
