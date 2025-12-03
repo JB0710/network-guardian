@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Device } from "@/types/device";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Globe, Lock, Download } from "lucide-react";
+import { AlertCircle, Globe, Lock, Download, Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,8 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
   const [deleteDeviceId, setDeleteDeviceId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBackendAvailable, setIsBackendAvailable] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const customCategories = useMemo(() => getUniqueCategories(devices), [devices]);
@@ -186,6 +188,64 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     });
   };
 
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    
+    try {
+      const text = await file.text();
+      const importedDevices = JSON.parse(text);
+      
+      if (!Array.isArray(importedDevices)) {
+        throw new Error('Invalid format: Expected an array of devices');
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const device of importedDevices) {
+        if (!device.name || !device.ip) {
+          errorCount++;
+          continue;
+        }
+
+        try {
+          await addDevice({
+            name: device.name,
+            ip: device.ip,
+            category: device.category || 'physical-server',
+            vendor: device.vendor,
+            location: device.location,
+          });
+          successCount++;
+        } catch {
+          errorCount++;
+        }
+      }
+
+      toast({
+        title: "Import completed",
+        description: `Successfully imported ${successCount} devices${errorCount > 0 ? `, ${errorCount} failed` : ''}.`,
+      });
+
+      onDevicesChange();
+    } catch (error) {
+      toast({
+        title: "Import failed",
+        description: error instanceof Error ? error.message : "Invalid JSON file format.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="space-y-4">
       {!isBackendAvailable && (
@@ -198,9 +258,26 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
         </Alert>
       )}
 
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleImport}
+        accept=".json"
+        className="hidden"
+      />
+
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-foreground">Manage Devices</h2>
         <div className="flex gap-2">
+          <Button 
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            className="gap-2"
+            disabled={!isBackendAvailable || isImporting}
+          >
+            <Upload className="h-4 w-4" />
+            {isImporting ? "Importing..." : "Import JSON"}
+          </Button>
           <Button 
             onClick={handleExport}
             variant="outline"
