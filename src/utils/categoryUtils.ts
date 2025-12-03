@@ -10,7 +10,8 @@ export const PRESET_CATEGORY_LABELS: Record<string, string> = {
   "dns-private": "DNS Servers (Private)",
 };
 
-export const getCategoryLabel = (category: string): string => {
+export const getCategoryLabel = (category: string | undefined): string => {
+  if (!category) return 'Uncategorized';
   if (PRESET_CATEGORY_LABELS[category]) {
     return PRESET_CATEGORY_LABELS[category];
   }
@@ -21,7 +22,8 @@ export const getCategoryLabel = (category: string): string => {
     .join(' ');
 };
 
-export const getSingularCategoryLabel = (category: string): string => {
+export const getSingularCategoryLabel = (category: string | undefined): string => {
+  if (!category) return 'Uncategorized';
   const pluralLabel = getCategoryLabel(category);
   // Simple pluralization removal
   if (pluralLabel.endsWith('es') && !pluralLabel.endsWith('ases')) {
