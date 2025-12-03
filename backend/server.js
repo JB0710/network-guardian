@@ -17,9 +17,8 @@ async function triggerBlink1Alert() {
   if (isBlinking || !blink1Enabled) return; // Already blinking or disabled
   
   try {
-    // Use pattern endpoint for continuous blinking (red -> off -> red...)
-    // repeats=100 gives long duration alert
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/pattern?rgb=%23FF0000,%23000000&time=0.5&repeats=100`);
+    // Use pattern endpoint with RGB colors (red, white, blue) and timing
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/pattern?rgb=%23ff0000,%23ffffff,%230000ff&time=.2&repeats=8`);
     if (response.ok) {
       isBlinking = true;
       console.log('Blink1: Started red alert blinking');
