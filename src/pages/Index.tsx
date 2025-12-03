@@ -5,11 +5,14 @@ import { DeviceManagement } from "@/components/DeviceManagement";
 import { Device, NetworkStats } from "@/types/device";
 import { calculateStats, fetchDevices } from "@/utils/mockData";
 import { getCategoryLabel, getUniqueCategories } from "@/utils/categoryUtils";
-import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff, LayoutGrid, List, Globe, Lock } from "lucide-react";
+import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff, LayoutGrid, List, Globe, Lock, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -27,6 +30,7 @@ const Index = () => {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [apiConnected, setApiConnected] = useState<boolean | null>(null);
   const [isCompactView, setIsCompactView] = useState(false);
+  const [blink1Enabled, setBlink1Enabled] = useState(true);
 
   const loadDevices = async () => {
     setLoading(true);
@@ -54,9 +58,42 @@ const Index = () => {
         method: 'GET',
         signal: AbortSignal.timeout(5000)
       });
-      setApiConnected(response.ok);
+      if (response.ok) {
+        setApiConnected(true);
+        const data = await response.json();
+        if (data.blink1Enabled !== undefined) {
+          setBlink1Enabled(data.blink1Enabled);
+        }
+      } else {
+        setApiConnected(false);
+      }
     } catch {
       setApiConnected(false);
+    }
+  };
+
+  const toggleBlink1 = async () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl || !apiConnected) return;
+    
+    try {
+      const response = await fetch(`${apiUrl}/api/blink1/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !blink1Enabled })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBlink1Enabled(data.enabled);
+        toast({
+          title: data.enabled ? "Blink1 Alerts Enabled" : "Blink1 Alerts Disabled",
+          description: data.enabled 
+            ? "You will receive visual alerts when devices go offline."
+            : "Visual alerts have been turned off.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to toggle blink1:", error);
     }
   };
 
@@ -88,6 +125,19 @@ const Index = () => {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              {apiConnected && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-card/50">
+                  <Lightbulb className={`h-4 w-4 ${blink1Enabled ? 'text-yellow-500' : 'text-muted-foreground'}`} />
+                  <Label htmlFor="blink1-toggle" className="text-sm cursor-pointer">
+                    Blink1
+                  </Label>
+                  <Switch
+                    id="blink1-toggle"
+                    checked={blink1Enabled}
+                    onCheckedChange={toggleBlink1}
+                  />
+                </div>
+              )}
               {apiConnected !== null && (
                 <Badge 
                   variant={apiConnected ? "default" : "secondary"}

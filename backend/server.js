@@ -9,10 +9,11 @@ const PORT = process.env.PORT || 3001;
 // Blink1 server configuration
 const BLINK1_SERVER_URL = process.env.BLINK1_SERVER_URL || 'http://localhost:8934';
 let isBlinking = false;
+let blink1Enabled = true; // Toggle for enabling/disabling blink1 alerts
 
 // Trigger blink1 to blink red
 async function triggerBlink1Alert() {
-  if (isBlinking) return; // Already blinking
+  if (isBlinking || !blink1Enabled) return; // Already blinking or disabled
   
   try {
     const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=500&count=0`);
@@ -252,7 +253,25 @@ app.post('/api/ping-now', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), blink1Enabled });
+});
+
+// Blink1 toggle endpoint
+app.post('/api/blink1/toggle', (req, res) => {
+  const { enabled } = req.body;
+  blink1Enabled = enabled !== undefined ? enabled : !blink1Enabled;
+  
+  // If disabling, stop any current blinking
+  if (!blink1Enabled && isBlinking) {
+    stopBlink1Alert();
+  }
+  
+  console.log(`Blink1 alerts ${blink1Enabled ? 'enabled' : 'disabled'}`);
+  res.json({ enabled: blink1Enabled });
+});
+
+app.get('/api/blink1/status', (req, res) => {
+  res.json({ enabled: blink1Enabled, isBlinking });
 });
 
 // Schedule automatic pings every 30 seconds
