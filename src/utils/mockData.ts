@@ -1,4 +1,4 @@
-import { Device, NetworkStats, DeviceCategory } from "@/types/device";
+import { Device, NetworkStats } from "@/types/device";
 
 export const calculateStats = (devices: Device[]): NetworkStats => {
   const totalDevices = devices.length;
@@ -84,7 +84,7 @@ export const triggerPing = async (): Promise<Device[]> => {
 };
 
 // Add a new device
-export const addDevice = async (deviceData: { name: string; ip: string; category: DeviceCategory; location?: string }): Promise<Device> => {
+export const addDevice = async (deviceData: { name: string; ip: string; category: string; location?: string }): Promise<Device> => {
   try {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     const response = await fetch(`${apiUrl}/api/devices`, {
@@ -108,7 +108,7 @@ export const addDevice = async (deviceData: { name: string; ip: string; category
 };
 
 // Update a device
-export const updateDevice = async (id: string, deviceData: { name: string; ip: string; category: DeviceCategory; location?: string }): Promise<Device> => {
+export const updateDevice = async (id: string, deviceData: { name: string; ip: string; category: string; location?: string }): Promise<Device> => {
   try {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     const response = await fetch(`${apiUrl}/api/devices/${id}`, {

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { DeviceCard } from "@/components/DeviceCard";
 import { StatsCard } from "@/components/StatsCard";
 import { DeviceManagement } from "@/components/DeviceManagement";
-import { Device, NetworkStats, DeviceCategory } from "@/types/device";
+import { Device, NetworkStats } from "@/types/device";
 import { calculateStats, fetchDevices } from "@/utils/mockData";
-import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff, LayoutGrid, List } from "lucide-react";
+import { getCategoryLabel, getUniqueCategories } from "@/utils/categoryUtils";
+import { Activity, Server, AlertTriangle, Gauge, Wifi, WifiOff, LayoutGrid, List, Globe, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -195,23 +196,21 @@ const Index = () => {
               </div>
             ) : isCompactView ? (
               <>
-                {(["firewall", "switch", "physical-server", "virtual-machine", "database"] as DeviceCategory[]).map((category) => {
+                {getUniqueCategories(devices).map((category) => {
                   const categoryDevices = devices.filter(d => d.category === category);
                   if (categoryDevices.length === 0) return null;
 
-                  const categoryLabels: Record<DeviceCategory, string> = {
-                    "firewall": "Firewalls",
-                    "switch": "Switches",
-                    "physical-server": "Physical Servers",
-                    "virtual-machine": "Virtual Machines",
-                    "database": "Databases"
+                  const getCategoryIcon = (cat: string) => {
+                    if (cat === 'dns-public') return <Globe className="h-4 w-4 text-blue-500" />;
+                    if (cat === 'dns-private') return <Lock className="h-4 w-4 text-orange-500" />;
+                    return <Server className="h-4 w-4" />;
                   };
 
                   return (
                     <div key={category} className="mb-6">
                       <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <Server className="h-4 w-4" />
-                        {categoryLabels[category]}
+                        {getCategoryIcon(category)}
+                        {getCategoryLabel(category)}
                       </h2>
                       <div className="rounded-lg border border-border bg-card">
                         <Table>
@@ -311,24 +310,22 @@ const Index = () => {
                 })()}
               </>
             ) : (
-              <>
-                {(["firewall", "switch", "physical-server", "virtual-machine", "database"] as DeviceCategory[]).map((category) => {
+            <>
+                {getUniqueCategories(devices).map((category) => {
                   const categoryDevices = devices.filter(d => d.category === category);
                   if (categoryDevices.length === 0) return null;
 
-                  const categoryLabels: Record<DeviceCategory, string> = {
-                    "firewall": "Firewalls",
-                    "switch": "Switches",
-                    "physical-server": "Physical Servers",
-                    "virtual-machine": "Virtual Machines",
-                    "database": "Databases"
+                  const getCategoryIcon = (cat: string) => {
+                    if (cat === 'dns-public') return <Globe className="h-5 w-5 text-blue-500" />;
+                    if (cat === 'dns-private') return <Lock className="h-5 w-5 text-orange-500" />;
+                    return <Server className="h-5 w-5" />;
                   };
 
                   return (
                     <div key={category}>
                       <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <Server className="h-5 w-5" />
-                        {categoryLabels[category]}
+                        {getCategoryIcon(category)}
+                        {getCategoryLabel(category)}
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         {categoryDevices.map((device) => (
