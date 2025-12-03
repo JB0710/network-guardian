@@ -270,8 +270,21 @@ app.post('/api/ping-now', async (req, res) => {
   res.json({ message: 'Ping completed', devices });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), blink1Enabled });
+// Check blink1 server connection
+async function checkBlink1Connection() {
+  try {
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/id`, {
+      signal: AbortSignal.timeout(3000)
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+app.get('/api/health', async (req, res) => {
+  const blink1Connected = await checkBlink1Connection();
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), blink1Enabled, blink1Connected });
 });
 
 // Blink1 toggle endpoint

@@ -29,6 +29,7 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [apiConnected, setApiConnected] = useState<boolean | null>(null);
+  const [blink1Connected, setBlink1Connected] = useState<boolean | null>(null);
   const [isCompactView, setIsCompactView] = useState(false);
   const [blink1Enabled, setBlink1Enabled] = useState(true);
 
@@ -63,6 +64,9 @@ const Index = () => {
         const data = await response.json();
         if (data.blink1Enabled !== undefined) {
           setBlink1Enabled(data.blink1Enabled);
+        }
+        if (data.blink1Connected !== undefined) {
+          setBlink1Connected(data.blink1Connected);
         }
       } else {
         setApiConnected(false);
@@ -192,6 +196,15 @@ const Index = () => {
                       API Disconnected
                     </>
                   )}
+                </Badge>
+              )}
+              {apiConnected && blink1Connected !== null && (
+                <Badge 
+                  variant={blink1Connected ? "default" : "destructive"}
+                  className="gap-1.5"
+                >
+                  <Lightbulb className="h-3 w-3" />
+                  {blink1Connected ? "Blink1 Connected" : "Blink1 Disconnected"}
                 </Badge>
               )}
               <Button
