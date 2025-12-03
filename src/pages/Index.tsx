@@ -198,15 +198,13 @@ const Index = () => {
                   )}
                 </Badge>
               )}
-              {apiConnected && blink1Connected !== null && (
-                <Badge 
-                  variant={blink1Connected ? "default" : "destructive"}
-                  className="gap-1.5"
-                >
-                  <Lightbulb className="h-3 w-3" />
-                  {blink1Connected ? "Blink1 Connected" : "Blink1 Disconnected"}
-                </Badge>
-              )}
+              <Badge 
+                variant={!apiConnected ? "secondary" : blink1Connected ? "default" : "destructive"}
+                className="gap-1.5"
+              >
+                <Lightbulb className="h-3 w-3" />
+                {!apiConnected ? "Blink1 Unavailable" : blink1Connected ? "Blink1 Connected" : "Blink1 Disconnected"}
+              </Badge>
               <Button
                 onClick={loadDevices}
                 disabled={loading}
