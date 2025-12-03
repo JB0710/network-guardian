@@ -314,6 +314,23 @@ app.post('/api/blink1/test', async (req, res) => {
   res.json({ success, message: success ? 'Test blink triggered on all devices' : 'Failed to trigger test blink' });
 });
 
+// Turn off all blink1 devices endpoint
+app.post('/api/blink1/off', async (req, res) => {
+  try {
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/off`);
+    if (response.ok) {
+      isBlinking = false;
+      console.log('Blink1: Manually turned off');
+      res.json({ success: true, message: 'Blink1 devices turned off' });
+    } else {
+      res.json({ success: false, message: 'Failed to turn off Blink1' });
+    }
+  } catch (error) {
+    console.error('Blink1: Could not turn off -', error.message);
+    res.json({ success: false, message: 'Could not connect to blink1-server' });
+  }
+});
+
 // Schedule automatic pings every 30 seconds
 cron.schedule('*/30 * * * * *', () => {
   pingAllDevices();
