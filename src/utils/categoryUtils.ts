@@ -1,4 +1,4 @@
-import { DeviceCategory, Device } from "@/types/device";
+import { Device } from "@/types/device";
 
 export const PRESET_CATEGORY_LABELS: Record<string, string> = {
   "firewall": "Firewalls",
