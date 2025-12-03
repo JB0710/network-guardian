@@ -11,14 +11,26 @@ const BLINK1_SERVER_URL = process.env.BLINK1_SERVER_URL || 'http://localhost:893
 let isBlinking = false;
 let blink1Enabled = true; // Toggle for enabling/disabling blink1 alerts
 
-// Trigger blink1 to blink red continuously
-// Note: node-blink1-server uses 'repeats' not 'count', and 'time' is in seconds
+// Blink1 pattern configuration (customizable via API)
+let blink1Pattern = {
+  colors: ['#ff0000', '#ffffff', '#0000ff'],
+  time: 0.2,
+  repeats: 8
+};
+
+// Build pattern URL from configuration
+function buildPatternUrl() {
+  const colorsParam = blink1Pattern.colors.map(c => encodeURIComponent(c)).join(',');
+  return `${BLINK1_SERVER_URL}/blink1/pattern?rgb=${colorsParam}&time=${blink1Pattern.time}&repeats=${blink1Pattern.repeats}`;
+}
+
+// Trigger blink1 alert using configured pattern
 async function triggerBlink1Alert() {
   if (isBlinking || !blink1Enabled) return; // Already blinking or disabled
   
   try {
-    // Use pattern endpoint with RGB colors (red, white, blue) and timing
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/pattern?rgb=%23ff0000,%23ffffff,%230000ff&time=.2&repeats=8`);
+    const patternUrl = buildPatternUrl();
+    const response = await fetch(patternUrl);
     if (response.ok) {
       isBlinking = true;
       console.log('Blink1: Started red alert blinking');
@@ -304,7 +316,50 @@ app.post('/api/blink1/toggle', (req, res) => {
 });
 
 app.get('/api/blink1/status', (req, res) => {
-  res.json({ enabled: blink1Enabled, isBlinking });
+  res.json({ enabled: blink1Enabled, isBlinking, pattern: blink1Pattern });
+});
+
+// Get current pattern configuration
+app.get('/api/blink1/pattern', (req, res) => {
+  res.json({ pattern: blink1Pattern });
+});
+
+// Update pattern configuration
+app.post('/api/blink1/pattern', (req, res) => {
+  const { pattern } = req.body;
+  if (pattern) {
+    if (pattern.colors && Array.isArray(pattern.colors) && pattern.colors.length > 0) {
+      blink1Pattern.colors = pattern.colors;
+    }
+    if (pattern.time && typeof pattern.time === 'number' && pattern.time > 0) {
+      blink1Pattern.time = pattern.time;
+    }
+    if (pattern.repeats && typeof pattern.repeats === 'number' && pattern.repeats > 0) {
+      blink1Pattern.repeats = pattern.repeats;
+    }
+    console.log('Blink1: Pattern updated -', blink1Pattern);
+  }
+  res.json({ pattern: blink1Pattern });
+});
+
+// Test pattern with custom config (without saving)
+app.post('/api/blink1/test-pattern', async (req, res) => {
+  const { pattern } = req.body;
+  try {
+    const testPattern = pattern || blink1Pattern;
+    const colorsParam = testPattern.colors.map(c => encodeURIComponent(c)).join(',');
+    const url = `${BLINK1_SERVER_URL}/blink1/pattern?rgb=${colorsParam}&time=${testPattern.time}&repeats=${testPattern.repeats}`;
+    
+    const response = await fetch(url);
+    if (response.ok) {
+      res.json({ success: true, message: 'Pattern test triggered' });
+    } else {
+      res.json({ success: false, message: 'Failed to trigger pattern test' });
+    }
+  } catch (error) {
+    console.error('Blink1: Test pattern failed -', error.message);
+    res.json({ success: false, message: 'Could not connect to blink1-server' });
+  }
 });
 
 // Test blink1 endpoint
