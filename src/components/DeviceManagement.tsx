@@ -82,7 +82,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add device. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to add device. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -104,7 +104,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update device. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update device. Please try again.",
         variant: "destructive",
       });
     } finally {
