@@ -11,16 +11,18 @@ const BLINK1_SERVER_URL = process.env.BLINK1_SERVER_URL || 'http://localhost:893
 let isBlinking = false;
 let blink1Enabled = true; // Toggle for enabling/disabling blink1 alerts
 
-// Trigger blink1 to blink red on ALL connected blink1 devices
+// Trigger blink1 to blink red continuously
+// Note: node-blink1-server uses 'repeats' not 'count', and 'time' is in seconds
 async function triggerBlink1Alert() {
   if (isBlinking || !blink1Enabled) return; // Already blinking or disabled
   
   try {
-    // Use /blink1/blink with id=all to blink all connected devices
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=500&count=0&id=all`);
+    // Use pattern endpoint for continuous blinking (red -> off -> red...)
+    // repeats=100 gives long duration alert
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/pattern?rgb=%23FF0000,%23000000&time=0.5&repeats=100`);
     if (response.ok) {
       isBlinking = true;
-      console.log('Blink1: Started red alert blinking on all devices');
+      console.log('Blink1: Started red alert blinking');
     } else {
       console.error('Blink1: Failed to trigger alert -', response.status);
     }
@@ -29,15 +31,15 @@ async function triggerBlink1Alert() {
   }
 }
 
-// Stop blink1 alert on ALL devices
+// Stop blink1 alert
 async function stopBlink1Alert() {
   if (!isBlinking) return; // Not currently blinking
   
   try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/off?id=all`);
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/off`);
     if (response.ok) {
       isBlinking = false;
-      console.log('Blink1: Stopped alert on all devices');
+      console.log('Blink1: Stopped alert');
     } else {
       console.error('Blink1: Failed to stop alert -', response.status);
     }
@@ -46,12 +48,13 @@ async function stopBlink1Alert() {
   }
 }
 
-// Test blink1 - blink red 3 times on all devices
+// Test blink1 - blink red 3 times
+// Uses correct params: time in seconds, 'repeats' not 'count'
 async function testBlink1() {
   try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=300&count=3&id=all`);
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=0.3&repeats=3`);
     if (response.ok) {
-      console.log('Blink1: Test triggered on all devices');
+      console.log('Blink1: Test triggered');
       return true;
     } else {
       console.error('Blink1: Test failed -', response.status);
