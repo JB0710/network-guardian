@@ -167,6 +167,36 @@ const Index = () => {
     }
   };
 
+  const turnOffBlink1 = async () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl || !apiConnected) return;
+    
+    try {
+      const response = await fetch(`${apiUrl}/api/blink1/off`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        toast({
+          title: "Blink1 Off",
+          description: "All Blink1 devices turned off.",
+        });
+      } else {
+        toast({
+          title: "Blink1 Off Failed",
+          description: "Could not turn off Blink1 devices.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Failed to turn off blink1:", error);
+      toast({
+        title: "Blink1 Off Failed",
+        description: "Could not connect to blink1 server.",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     loadDevices();
     checkApiConnection();
@@ -213,6 +243,14 @@ const Index = () => {
                     className="h-7 px-2 text-xs"
                   >
                     Test
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={turnOffBlink1}
+                    className="h-7 px-2 text-xs"
+                  >
+                    Off
                   </Button>
                 </div>
               )}
