@@ -273,7 +273,7 @@ app.post('/api/ping-now', async (req, res) => {
 // Check blink1 server connection
 async function checkBlink1Connection() {
   try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/id`, {
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1`, {
       signal: AbortSignal.timeout(3000)
     });
     return response.ok;
