@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { DeviceForm } from "@/components/DeviceForm";
 import { StatusBadge } from "@/components/StatusBadge";
+import { VendorLogo } from "@/components/VendorLogo";
 import { Plus, Pencil, Trash2, Server } from "lucide-react";
 import { addDevice, updateDevice, deleteDevice } from "@/utils/mockData";
 import { useToast } from "@/hooks/use-toast";
@@ -69,7 +70,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     checkBackend();
   }, []);
 
-  const handleAdd = async (data: { name: string; ip: string; category: string; location?: string }) => {
+  const handleAdd = async (data: { name: string; ip: string; category: string; vendor?: string; location?: string }) => {
     setIsSubmitting(true);
     try {
       await addDevice(data);
@@ -90,7 +91,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
     }
   };
 
-  const handleEdit = async (data: { name: string; ip: string; category: string; location?: string }) => {
+  const handleEdit = async (data: { name: string; ip: string; category: string; vendor?: string; location?: string }) => {
     if (!editDevice) return;
     setIsSubmitting(true);
     try {
@@ -169,6 +170,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Vendor</TableHead>
               <TableHead>IP Address</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Category</TableHead>
@@ -179,7 +181,7 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
           <TableBody>
             {devices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   No devices configured. Add your first device to start monitoring.
                 </TableCell>
               </TableRow>
@@ -187,6 +189,13 @@ export function DeviceManagement({ devices, onDevicesChange }: DeviceManagementP
               devices.map((device) => (
                 <TableRow key={device.id}>
                   <TableCell className="font-medium">{device.name}</TableCell>
+                  <TableCell>
+                    {device.vendor ? (
+                      <VendorLogo vendor={device.vendor} size={24} />
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="font-mono text-sm">{device.ip}</TableCell>
                   <TableCell>
                     <StatusBadge status={device.status} />

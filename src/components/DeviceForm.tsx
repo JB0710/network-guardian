@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Device } from "@/types/device";
 import { Plus } from "lucide-react";
+import { VendorLogo, PRESET_VENDORS } from "./VendorLogo";
 
 const PRESET_CATEGORIES = [
   { value: "firewall", label: "Firewall" },
@@ -39,6 +40,7 @@ const deviceSchema = z.object({
     "Invalid IP address or hostname"
   ),
   category: z.string().min(1, "Category is required"),
+  vendor: z.string().optional(),
   location: z.string().trim().max(200).optional(),
 });
 
@@ -69,6 +71,7 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting, customCat
       name: device?.name || "",
       ip: device?.ip || "",
       category: device?.category || "physical-server",
+      vendor: device?.vendor || "",
       location: device?.location || "",
     },
   });
@@ -161,6 +164,42 @@ export function DeviceForm({ device, onSubmit, onCancel, isSubmitting, customCat
                   </Button>
                 </div>
               )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="vendor"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Vendor/Brand (Optional)</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a vendor">
+                      {field.value && (
+                        <div className="flex items-center gap-2">
+                          <VendorLogo vendor={field.value} size={18} />
+                          <span>{PRESET_VENDORS.find(v => v.value === field.value)?.label || field.value}</span>
+                        </div>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {PRESET_VENDORS.map((vendor) => (
+                    <SelectItem key={vendor.value} value={vendor.value}>
+                      <div className="flex items-center gap-2">
+                        <VendorLogo vendor={vendor.value} size={18} />
+                        <span>{vendor.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
