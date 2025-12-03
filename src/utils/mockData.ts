@@ -65,85 +65,79 @@ export const fetchDevices = async (): Promise<Device[]> => {
 
 // Trigger manual ping
 export const triggerPing = async (): Promise<Device[]> => {
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/ping-now`, {
-      method: 'POST'
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to trigger ping: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data.devices;
-  } catch (error) {
-    console.error('Error triggering ping:', error);
-    throw error;
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (!apiUrl) {
+    throw new Error('Backend not configured. Please set VITE_API_URL.');
   }
+  
+  const response = await fetch(`${apiUrl}/api/ping-now`, {
+    method: 'POST'
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to trigger ping: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.devices;
 };
 
 // Add a new device
 export const addDevice = async (deviceData: { name: string; ip: string; category: string; location?: string }): Promise<Device> => {
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/devices`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(deviceData),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to add device: ${response.statusText}`);
-    }
-    
-    const device = await response.json();
-    return device;
-  } catch (error) {
-    console.error('Error adding device:', error);
-    throw error;
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (!apiUrl) {
+    throw new Error('Backend not configured. Please set VITE_API_URL.');
   }
+  
+  const response = await fetch(`${apiUrl}/api/devices`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(deviceData),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to add device: ${response.statusText}`);
+  }
+  
+  return response.json();
 };
 
 // Update a device
 export const updateDevice = async (id: string, deviceData: { name: string; ip: string; category: string; location?: string }): Promise<Device> => {
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/devices/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(deviceData),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to update device: ${response.statusText}`);
-    }
-    
-    const device = await response.json();
-    return device;
-  } catch (error) {
-    console.error('Error updating device:', error);
-    throw error;
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (!apiUrl) {
+    throw new Error('Backend not configured. Please set VITE_API_URL.');
   }
+  
+  const response = await fetch(`${apiUrl}/api/devices/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(deviceData),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to update device: ${response.statusText}`);
+  }
+  
+  return response.json();
 };
 
 // Delete a device
 export const deleteDevice = async (id: string): Promise<void> => {
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/devices/${id}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to delete device: ${response.statusText}`);
-    }
-  } catch (error) {
-    console.error('Error deleting device:', error);
-    throw error;
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (!apiUrl) {
+    throw new Error('Backend not configured. Please set VITE_API_URL.');
+  }
+  
+  const response = await fetch(`${apiUrl}/api/devices/${id}`, {
+    method: 'DELETE',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to delete device: ${response.statusText}`);
   }
 };
