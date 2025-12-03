@@ -11,15 +11,16 @@ const BLINK1_SERVER_URL = process.env.BLINK1_SERVER_URL || 'http://localhost:893
 let isBlinking = false;
 let blink1Enabled = true; // Toggle for enabling/disabling blink1 alerts
 
-// Trigger blink1 to blink red
+// Trigger blink1 to blink red on ALL connected blink1 devices
 async function triggerBlink1Alert() {
   if (isBlinking || !blink1Enabled) return; // Already blinking or disabled
   
   try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=500&count=0`);
+    // Use /blink1/blink with id=all to blink all connected devices
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=500&count=0&id=all`);
     if (response.ok) {
       isBlinking = true;
-      console.log('Blink1: Started red alert blinking');
+      console.log('Blink1: Started red alert blinking on all devices');
     } else {
       console.error('Blink1: Failed to trigger alert -', response.status);
     }
@@ -28,20 +29,37 @@ async function triggerBlink1Alert() {
   }
 }
 
-// Stop blink1 alert (turn off or set to green)
+// Stop blink1 alert on ALL devices
 async function stopBlink1Alert() {
   if (!isBlinking) return; // Not currently blinking
   
   try {
-    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/off`);
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/off?id=all`);
     if (response.ok) {
       isBlinking = false;
-      console.log('Blink1: Stopped alert, all devices online');
+      console.log('Blink1: Stopped alert on all devices');
     } else {
       console.error('Blink1: Failed to stop alert -', response.status);
     }
   } catch (error) {
     console.error('Blink1: Could not connect to blink1-server -', error.message);
+  }
+}
+
+// Test blink1 - blink red 3 times on all devices
+async function testBlink1() {
+  try {
+    const response = await fetch(`${BLINK1_SERVER_URL}/blink1/blink?rgb=%23FF0000&time=300&count=3&id=all`);
+    if (response.ok) {
+      console.log('Blink1: Test triggered on all devices');
+      return true;
+    } else {
+      console.error('Blink1: Test failed -', response.status);
+      return false;
+    }
+  } catch (error) {
+    console.error('Blink1: Could not connect to blink1-server -', error.message);
+    return false;
   }
 }
 
@@ -272,6 +290,12 @@ app.post('/api/blink1/toggle', (req, res) => {
 
 app.get('/api/blink1/status', (req, res) => {
   res.json({ enabled: blink1Enabled, isBlinking });
+});
+
+// Test blink1 endpoint
+app.post('/api/blink1/test', async (req, res) => {
+  const success = await testBlink1();
+  res.json({ success, message: success ? 'Test blink triggered on all devices' : 'Failed to trigger test blink' });
 });
 
 // Schedule automatic pings every 30 seconds

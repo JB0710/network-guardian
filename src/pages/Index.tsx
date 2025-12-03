@@ -97,6 +97,36 @@ const Index = () => {
     }
   };
 
+  const testBlink1 = async () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl || !apiConnected) return;
+    
+    try {
+      const response = await fetch(`${apiUrl}/api/blink1/test`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        toast({
+          title: "Blink1 Test",
+          description: "Test blink triggered on all devices.",
+        });
+      } else {
+        toast({
+          title: "Blink1 Test Failed",
+          description: "Could not trigger test blink.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Failed to test blink1:", error);
+      toast({
+        title: "Blink1 Test Failed",
+        description: "Could not connect to blink1 server.",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     loadDevices();
     checkApiConnection();
@@ -136,6 +166,14 @@ const Index = () => {
                     checked={blink1Enabled}
                     onCheckedChange={toggleBlink1}
                   />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={testBlink1}
+                    className="h-7 px-2 text-xs"
+                  >
+                    Test
+                  </Button>
                 </div>
               )}
               {apiConnected !== null && (
