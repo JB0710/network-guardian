@@ -58,10 +58,31 @@ const Index = () => {
     }
   };
 
+  const checkBlink1Direct = async () => {
+    const blink1Url = import.meta.env.VITE_BLINK1_SERVER_URL;
+    if (!blink1Url) return;
+    
+    try {
+      const response = await fetch(`${blink1Url}/blink1`, { 
+        method: 'GET',
+        signal: AbortSignal.timeout(3000)
+      });
+      if (response.ok) {
+        setBlink1Connected(true);
+      } else {
+        setBlink1Connected(false);
+      }
+    } catch {
+      setBlink1Connected(false);
+    }
+  };
+
   const checkApiConnection = async () => {
     const apiUrl = import.meta.env.VITE_API_URL;
     if (!apiUrl) {
       setApiConnected(false);
+      // Try direct Blink1 check when no backend
+      await checkBlink1Direct();
       return;
     }
     
@@ -81,9 +102,13 @@ const Index = () => {
         }
       } else {
         setApiConnected(false);
+        // Try direct Blink1 check when backend unavailable
+        await checkBlink1Direct();
       }
     } catch {
       setApiConnected(false);
+      // Try direct Blink1 check when backend unavailable
+      await checkBlink1Direct();
     }
   };
 
